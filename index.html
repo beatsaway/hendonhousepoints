@@ -1,409 +1,92 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Interactive Rotating Plumbobs with House Points</title>
-    
-    <!-- Viewport Meta Tag for Mobile Responsiveness -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    <title>Four Houses</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap" rel="stylesheet">
+
     <style>
-        /* General Styles */
         body {
             margin: 0;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
             overflow: hidden;
-            font-family: 'Cinzel', serif; 
-            background-color: #00023b; /* Match Three.js background */
-        }
+            color: white;
+            font-family: 'Poppins', sans-serif;
+        } 
 
-        /* 3D Canvas */
-        #three-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0; /* Background layer */
-        }
-
-        /* Overlay Container */
-        .overlay {
+        .diamond-info span {
             position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 3;
-            display: flex;
-            gap: 15px;
-            padding: 12px 20px;
-            border-radius: 12px;
-            max-width: 90%;
-            overflow-x: auto;
-            backdrop-filter: blur(10px); /* Glassmorphism effect */
-        }
-
-        /* Button Styling */
-        .overlay button {
-            font-family: 'Arial', sans-serif; /* Modern sans-serif font */
-            font-size: 14px;
-            padding: 10px 18px;
-            background: rgba(255, 255, 255, 0.1);
-            color: #f0e6d2;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-            min-width: 80px;
+            color: white;
+            text-shadow: 1px 1px 2px black;
             text-align: center;
         }
 
-        .overlay button:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: scale(1.05);
+        .main-text {
+            font-size: 3rem;
+            transition: transform 0.3s ease;
+            cursor: pointer;
         }
 
-        .overlay button.active {
-            background: #8b4513; /* Highlight active button */
-            color: #fff;
-        }
-
-        /* Label Styling */
-        .plumbob-label {
-            position: absolute;
-            color: #f0e6d2;
-            font-size: 1.1rem;
+        .details {
+            font-size: 1rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
             pointer-events: none;
-            transform: translate(-50%, -50%);
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-            z-index: 4;
         }
 
-        /* Responsive Adjustments */
-        @media (max-width: 768px) {
-            .overlay {
-                flex-wrap: wrap;
-                padding: 8px 16px;
-            }
-
-            .overlay button {
-                font-size: 13px;
-                padding: 8px 14px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .overlay {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .overlay button {
-                font-size: 14px;
-                padding: 10px 16px;
-                min-width: 100%;
-            }
-
-            .plumbob-label {
-                font-size: 1.3rem;
-            }
-        }
-
-        /* Hide Scrollbar */
-        .overlay::-webkit-scrollbar {
-            display: none;
+        .diamond-info span:hover .details {
+            opacity: 1;
         }
     </style>
-
 </head>
 <body>
-    <!-- 3D Scene Canvas -->
-    <div id="three-canvas"></div>
-
-    <!-- Overlay Buttons for Category Selection -->
-    <div class="overlay">
-    <button onclick="consoleLogCameraStatsRealtime()" style="display: none;">Cap Camera</button>
-        <button onclick="displayCategoryPoints('year7')">Y7</button>
-        <button onclick="displayCategoryPoints('year8')">Y8</button>
-        <button onclick="displayCategoryPoints('year9')">Y9</button>
-        <button onclick="displayCategoryPoints('year10')">Y10</button>
-        <button onclick="displayCategoryPoints('year11')">Y11</button>
-        <button onclick="displayCategoryPoints('ks3Total')">KS3</button>
-        <button onclick="displayCategoryPoints('ks4Total')">KS4</button>
-        <button onclick="displayCategoryPoints('wholeTotal')">Total</button>
+    <div class="diamond-container">
+        <div class="diamond-info" id="ruby-info">
+            <span id="ruby-text"></span>
+        </div>
+        <div class="diamond-info" id="amber-info">
+            <span id="amber-text"></span>
+        </div>
+        <div class="diamond-info" id="emerald-info">
+            <span id="emerald-text"></span>
+        </div>
+        <div class="diamond-info" id="sapphire-info">
+            <span id="sapphire-text"></span>
+        </div>
     </div>
 
-    <!-- Plumbob Labels Container -->
-    <div id="labels-container"></div>
-
-    <!-- Three.js, OrbitControls, and GSAP Libraries -->
     <script src="https://threejsfundamentals.org/threejs/resources/threejs/r127/build/three.min.js"></script>
-    <!-- OrbitControls r127 -->
     <script src="https://threejsfundamentals.org/threejs/resources/threejs/r127/examples/js/controls/OrbitControls.js"></script>
-    <!-- GSAP Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script>
-        function consoleLogCameraStatsRealtime() {
-    console.log("Camera Position:", camera.position);
-    console.log("Camera Rotation:", camera.rotation);
-    console.log("Camera FOV:", camera.fov);
-    console.log("Camera Aspect Ratio:", camera.aspect);
-    console.log("Camera Near Clipping Plane:", camera.near);
-    console.log("Camera Far Clipping Plane:", camera.far);
-}
+        // Animation function for counting up numbers
+        function animateValue(start, end, duration, callback) {
+            const startTime = performance.now();
+            
+            function update() {
+                const currentTime = performance.now();
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Easing function for smooth animation
+                const easeOutQuad = t => t * (2 - t);
+                const easedProgress = easeOutQuad(progress);
+                
+                const current = Math.floor(start + (end - start) * easedProgress);
+                callback(current);
 
-        // === House Data and Management ===
-        // Function to log camera statistics
-        function consoleLogCameraStatsRealtime() {
-            console.log("Camera Position:", camera.position);
-            console.log("Camera Rotation:", camera.rotation);
-            console.log("Camera FOV:", camera.fov);
-            console.log("Camera Aspect Ratio:", camera.aspect);
-            console.log("Camera Near Clipping Plane:", camera.near);
-            console.log("Camera Far Clipping Plane:", camera.far);
-        }
-
-        // Initial Data
-        const housesData = {
-            emerald: {
-                name: 'Emerald',
-                year7: 3069,
-                year8: 3232,
-                year9: 2835,
-                year10: 2755,
-                year11: 2201,
-                ks3Total: 0,
-                ks4Total: 0,
-                wholeTotal: 0
-            },
-            sapphire: {
-                name: 'Sapphire',
-                year7: 2698,
-                year8: 3233,
-                year9: 2485,
-                year10: 3031,
-                year11: 2355,
-                ks3Total: 0,
-                ks4Total: 0,
-                wholeTotal: 0
-            },
-            ruby: {
-                name: 'Ruby',
-                year7: 2893,
-                year8: 3164,
-                year9: 3160,
-                year10: 2631,
-                year11: 2725,
-                ks3Total: 0,
-                ks4Total: 0,
-                wholeTotal: 0
-            },
-            amber: {
-                name: 'Amber',
-                year7: 2623,
-                year8: 2654,
-                year9: 2430,
-                year10: 3026,
-                year11: 2288,
-                ks3Total: 0,
-                ks4Total: 0,
-                wholeTotal: 0
-            }
-        };
-
-        // Function to calculate totals
-        function calculateTotals(house) {
-            const ks3Total = house.year7 + house.year8 + house.year9;
-            const ks4Total = house.year10 + house.year11;
-            const wholeTotal = ks3Total + ks4Total;
-            return { ks3Total, ks4Total, wholeTotal };
-        }
-
-        // Initialize totals
-        function initializeTotals() {
-            for (let house of Object.values(housesData)) {
-                Object.assign(house, calculateTotals(house));
-            }
-        }
-
-        // Initialize totals and render initial state
-        initializeTotals();
-
-        // === Three.js Scene Setup ===
-
-        // Create the scene
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color('#00023b'); // Dark blue background to match CSS
-
-        // === Camera Configuration ===
-        // Create the camera with specified settings
-        const camera = new THREE.PerspectiveCamera(
-            75, // Camera FOV
-            window.innerWidth / window.innerHeight, // Responsive aspect ratio
-            0.1, // Camera Near Clipping Plane
-            1000 // Camera Far Clipping Plane (increased for better star visibility)
-        );
-
-        // Set default Camera Position
-        camera.position.set(-0.851505233651819, 4.1174045243844475, 6.098105890519157);
-
-        // Set default Camera Rotation
-        camera.rotation.set(-0.5256368293146731, -0.10339789156509387, -0.05979990657819899);
-        // Set Camera Rotation
-        camera.rotation.order = 'XYZ'; // Ensure rotation order matches the provided data
-        
-        // Create the renderer
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        document.getElementById('three-canvas').appendChild(renderer.domElement); // Append renderer to the DOM
-
-        // Add OrbitControls for interactive camera movement
-        const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true; // Enable damping for smooth controls
-        controls.dampingFactor = 0.05;
-
-        // === Lighting Setup ===
-
-        // Ambient light for general illumination
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // Soft white light
-        scene.add(ambientLight);
-
-        // Point light for specular highlights and depth
-        const pointLight = new THREE.PointLight(0xffffff, 1);
-        pointLight.position.set(10, 20, 10); // Position the light above and to the side
-        scene.add(pointLight);
-
-        // === Starfield Setup ===
-
-        // Create a texture for circular stars using Canvas
-        function createStarTexture() {
-            const size = 64;
-            const canvas = document.createElement('canvas');
-            canvas.width = size;
-            canvas.height = size;
-            const context = canvas.getContext('2d');
-
-            // Draw a white circle
-            context.beginPath();
-            context.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2, false);
-            context.closePath();
-
-            // Create radial gradient for smooth edges
-            const gradient = context.createRadialGradient(size / 2, size / 2, size / 2, size / 2, size / 2, 0);
-            gradient.addColorStop(0.0, 'rgba(255,255,255,0.8)');
-            gradient.addColorStop(0.2, 'rgba(255,255,255,0.6)');
-            gradient.addColorStop(0.4, 'rgba(255,255,255,1)');
-            gradient.addColorStop(1.0, 'rgba(255,255,255,1)');
-            context.fillStyle = gradient;
-            context.fill();
-
-            const texture = new THREE.CanvasTexture(canvas);
-            return texture;
-        }
-
-        const starTexture = createStarTexture();
-
-        // Create a geometry to hold all star positions
-        const starGeometry = new THREE.BufferGeometry();
-        const starCount = 5000; // Increased number of stars for a denser background
-        const starPositions = [];
-
-        for (let i = 0; i < starCount; i++) {
-            const x = THREE.MathUtils.randFloatSpread(1000); // Adjusted spread for movement
-            const y = THREE.MathUtils.randFloatSpread(1000);
-            const z = THREE.MathUtils.randFloatSpread(1000);
-            starPositions.push(x, y, z);
-        }
-
-        starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
-
-        // Create a Points material for stars
-        const starMaterial = new THREE.PointsMaterial({
-            map: starTexture, // Assign the circular star texture
-            size: 1.5, // Increased star size
-            sizeAttenuation: true,
-            transparent: true,
-            opacity: 0.8,
-            depthWrite: false, // Prevent stars from occluding other objects
-            blending: THREE.AdditiveBlending // Enhance star brightness
-        });
-
-        // Create the Points object and add to the scene
-        const stars = new THREE.Points(starGeometry, starMaterial);
-        scene.add(stars);
-
-        // === Shooting Stars Setup ===
-
-        class ShootingStar {
-            constructor() {
-                const geometry = new THREE.SphereGeometry(1, 8, 8); // Slightly larger for visibility
-                const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
-                this.mesh = new THREE.Mesh(geometry, material);
-
-                // Initialize position at a random left edge
-                const edge = Math.floor(Math.random() * 2); // 0 for left, 1 for top
-                const range = 500; // Adjusted range for visibility
-                if (edge === 0) { // Left
-                    this.mesh.position.set(-range, THREE.MathUtils.randFloatSpread(200), THREE.MathUtils.randFloatSpread(200));
-                } else { // Top
-                    this.mesh.position.set(THREE.MathUtils.randFloatSpread(200), THREE.MathUtils.randFloatSpread(200), THREE.MathUtils.randFloatSpread(200));
+                if (progress < 1) {
+                    requestAnimationFrame(update);
                 }
-
-                // Set velocity towards the right (left to right)
-                const direction = new THREE.Vector3(1, 0, 0).normalize(); // Move along positive X-axis
-                this.velocity = direction.multiplyScalar(15 + Math.random() * 10); // Faster speed
-
-                this.lifetime = 0;
-                this.maxLifetime = 60; // Frames
-                scene.add(this.mesh);
             }
-
-            update() {
-                this.mesh.position.add(this.velocity);
-                this.lifetime++;
-            }
-
-            isExpired() {
-                return this.lifetime > this.maxLifetime;
-            }
-
-            dispose() {
-                scene.remove(this.mesh);
-                this.mesh.geometry.dispose();
-                this.mesh.material.dispose();
-            }
+            
+            update();
         }
 
-        const shootingStars = [];
-        const maxShootingStars = 10; // Increased maximum shooting stars
-        const shootingStarInterval = 1000; // Reduced interval for more frequent shooting stars
-
-        function createShootingStar() {
-            if (shootingStars.length >= maxShootingStars) return;
-            const star = new ShootingStar();
-            shootingStars.push(star);
-        }
-
-        // Periodically create shooting stars
-        setInterval(createShootingStar, shootingStarInterval);
-
-        // === Plumbob Class ===
-
-        class Plumbob {
-            constructor(size = 1, rotationSpeed = 0.005, color = '#00ff00') {
-                this.size = size;
-                this.rotationSpeed = rotationSpeed;
+        class DiamondShape {
+            constructor(color) {
                 this.color = color;
-
-                // Create a group to hold the Plumbob components
-                this.group = new THREE.Group();
-                this.group.scale.set(this.size, this.size, this.size);
-
-                // Add the diamond mesh to the group
-                const diamondMesh = this.createDiamondMesh();
-                this.group.add(diamondMesh);
+                this.mesh = this.createDiamondMesh();
             }
 
             createDiamondMesh() {
@@ -446,284 +129,156 @@
                 geometry.setIndex(indices);
                 geometry.computeVertexNormals();
 
+                const colors = new Float32Array(vertices.length);
+                for (let i = 0; i < vertices.length / 3; i++) {
+                    const baseColor = new THREE.Color(this.color);
+                    baseColor.offsetHSL(Math.random() * 0.1 - 0.05, 0, Math.random() * 0.1 - 0.05);
+                    colors.set(baseColor.toArray(), i * 3);
+                }
+
+                geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
                 const material = new THREE.MeshPhongMaterial({
+                    vertexColors: true,
                     shininess: 150,
                     specular: 0xffffff,
                     transparent: true,
                     flatShading: true,
-                    opacity: 0.75,
-
-                    color: new THREE.Color(this.color) 
+                    opacity: 0.75
                 });
 
                 return new THREE.Mesh(geometry, material);
             }
-
-            addToGroup(group) {
-                group.add(this.group);
-            }
-
-            update() {
-                this.group.rotation.y += this.rotationSpeed;
-            }
         }
 
+        // Scene setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
 
-        // Function to create a plumbob label
-        function createPlumbobLabel() {
-            const label = document.createElement('div');
-            label.className = 'plumbob-label';
-            document.getElementById('labels-container').appendChild(label); // Append to labels-container
-            return label;
-        }
-
-        // === Create a Parent Group for All Plumbobs ===
-        const plumbobGroup = new THREE.Group();
-        scene.add(plumbobGroup);
-
-        // === Create Plumbobs ===
-
-        // Helper function to generate a slight random rotation speed
-        function getRandomRotationSpeed(baseSpeed) {
-            return baseSpeed + (Math.random() - 0.5) * 0.002; // Slight variation
-        }
-
-        // Instantiate four Plumbobs with different colors and slightly random rotation speeds
-        const plumbobRed = new Plumbob(1.33, getRandomRotationSpeed(0.005), 'red');
-        plumbobRed.addToGroup(plumbobGroup);
-        plumbobRed.group.position.set(-4, 2, 0); // Initial position (will be updated dynamically)
-
-        const plumbobYellow = new Plumbob(1.33, getRandomRotationSpeed(0.005), 'yellow');
-        plumbobYellow.addToGroup(plumbobGroup);
-        plumbobYellow.group.position.set(-1.33, 2, 0); // Initial position (will be updated dynamically)
-
-        const plumbobGreen = new Plumbob(1.33, getRandomRotationSpeed(0.005), 'green');
-        plumbobGreen.addToGroup(plumbobGroup);
-        plumbobGreen.group.position.set(1.33, 2, 0); // Initial position (will be updated dynamically)
-
-        const plumbobBlue = new Plumbob(1.33, getRandomRotationSpeed(0.005), 'blue');
-        plumbobBlue.addToGroup(plumbobGroup);
-        plumbobBlue.group.position.set(4, 2, 0); // Initial position (will be updated dynamically)
-
-        // Store Plumbob instances in an array with their corresponding keys, labels, and movement parameters
-        const plumbobs = [
-            { 
-                plumbob: plumbobRed, 
-                key: 'ruby', 
-                label: createPlumbobLabel(), 
-                phase: Math.random() * Math.PI * 2, 
-                amplitude: 0.2, 
-                baseY: 2,
-                targetX: plumbobRed.group.position.x, // Initialize target positions
-                targetY: plumbobRed.group.position.y
-            },
-            { 
-                plumbob: plumbobYellow, 
-                key: 'amber', 
-                label: createPlumbobLabel(), 
-                phase: Math.random() * Math.PI * 2, 
-                amplitude: 0.2, 
-                baseY: 2,
-                targetX: plumbobYellow.group.position.x,
-                targetY: plumbobYellow.group.position.y
-            },
-            { 
-                plumbob: plumbobGreen, 
-                key: 'emerald', 
-                label: createPlumbobLabel(), 
-                phase: Math.random() * Math.PI * 2, 
-                amplitude: 0.2, 
-                baseY: 2,
-                targetX: plumbobGreen.group.position.x,
-                targetY: plumbobGreen.group.position.y
-            },
-            { 
-                plumbob: plumbobBlue, 
-                key: 'sapphire', 
-                label: createPlumbobLabel(), 
-                phase: Math.random() * Math.PI * 2, 
-                amplitude: 0.2, 
-                baseY: 2,
-                targetX: plumbobBlue.group.position.x,
-                targetY: plumbobBlue.group.position.y
-            }
+        // Create diamonds with colors and positions
+        const diamonds = [
+            { color: 0xff0000, position: [-2, 2, 0] }, // Ruby
+            { color: 0xffbf00, position: [0, 2, 0] },  // Amber
+            { color: 0x00ff00, position: [2, 2, 0] },  // Emerald
+            { color: 0x0000ff, position: [4, 2, 0] }   // Sapphire
         ];
 
-        // === Animation Parameters ===
-
-        let initialAnimation = true; // Flag to control initial group rotation animation
-        const initialAnimationDuration = 2000; // 2 seconds in milliseconds
-        const initialStartTime = Date.now();
-
-        // Define group rotation parameters for GSAP
-        const initialRotation = {
-            y: plumbobGroup.rotation.y
-        };
-
-        const finalRotation = {
-            y: plumbobGroup.rotation.y + Math.PI * 4 // Rotate 4 half-turns (2 full turns)
-        };
-
-        // Start the initial rotation with GSAP
-        gsap.to(initialRotation, {
-            y: finalRotation.y,
-            duration: 2, // 2 seconds
-            ease: "power2.out",
-            onUpdate: () => {
-                plumbobGroup.rotation.y = initialRotation.y;
-            },
-            onComplete: () => {
-                initialAnimation = false; // Stop further rotations after initial animation
-            }
+        diamonds.forEach(({ color, position }) => {
+            const diamond = new DiamondShape(color);
+            diamond.mesh.position.set(...position);
+            scene.add(diamond.mesh);
         });
 
-        // === Animation Loop ===
+        // Lighting
+        const light1 = new THREE.PointLight(0xffffff, 9.5, 50);
+        light1.position.set(5, 5, 5);
+        scene.add(light1);
 
-        function animate() {
-            requestAnimationFrame(animate);
+        const light2 = new THREE.PointLight(0xffffff, 2.7, 50);
+        light2.position.set(-5, 5, -5);
+        scene.add(light2);
 
-            // Update Shooting Stars
-            for (let i = shootingStars.length - 1; i >= 0; i--) {
-                const star = shootingStars[i];
-                star.update();
-                if (star.isExpired()) {
-                    star.dispose();
-                    shootingStars.splice(i, 1);
-                }
-            }
+        const ambientLight = new THREE.AmbientLight(0x404040);
+        scene.add(ambientLight);
 
-            // Update Starfield Positions
-            const positions = starGeometry.attributes.position.array;
-            const speed = 1; // Adjust speed as needed
-            for (let i = 0; i < positions.length; i += 3) {
-                positions[i] += speed; // Move right along the X-axis
-                if (positions[i] > 500) {
-                    positions[i] = -500;
-                    positions[i + 1] = THREE.MathUtils.randFloatSpread(1000);
-                    positions[i + 2] = THREE.MathUtils.randFloatSpread(1000);
-                }
-            }
-            starGeometry.attributes.position.needsUpdate = true;
+        // Camera controls
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        camera.position.set(0, 1, 5);
+        controls.update();
 
-            // Update Plumbobs (Diamonds) Rotation
-            plumbobs.forEach(item => {
-                item.plumbob.group.rotation.y += item.plumbob.rotationSpeed; // Apply rotation speed
-            });
+        // Houses data
+        const housesData = {
+            ruby: { name: 'Ruby', year7: 2893, year8: 3164, year9: 3160, year10: 2631, year11: 2725 },
+            amber: { name: 'Amber', year7: 2623, year8: 2654, year9: 2430, year10: 3026, year11: 2288 },
+            emerald: { name: 'Emerald', year7: 3069, year8: 3232, year9: 2835, year10: 2755, year11: 2201 },
+            sapphire: { name: 'Sapphire', year7: 2698, year8: 3233, year9: 2485, year10: 3031, year11: 2355 }
+        };
 
-            // Update OrbitControls
-            controls.update();
-
-            // Update and position labels
-            plumbobs.forEach(item => {
-                const pos = new THREE.Vector3();
-                item.plumbob.group.getWorldPosition(pos);
-                pos.project(camera);
-
-                const x = (pos.x * 0.5 + 0.5) * window.innerWidth;
-                const y = (-pos.y * 0.5 + 0.5) * window.innerHeight;
-
-                item.label.style.left = `${x}px`;
-                item.label.style.top = `${y}px`;
-
-                if (item.label.innerHTML) {
-                    item.label.style.display = 'block';
-                } else {
-                    item.label.style.display = 'none';
-                }
-            });
-
-            // Render the scene
-            renderer.render(scene, camera);
-        }
-
-        animate(); // Start the animation loop
-
-        // === Handle Window Resize ===
-
-        window.addEventListener('resize', () => {
-            // Update camera aspect ratio and projection matrix
-            camera.aspect = window.innerWidth / window.innerHeight; // This maintains responsiveness
-            camera.updateProjectionMatrix();
-
-            // Update renderer size
-            renderer.setSize(window.innerWidth, window.innerHeight);
+        // Calculate totals for each house
+        Object.keys(housesData).forEach(house => {
+            const data = housesData[house];
+            data.wholeTotal = data.year7 + data.year8 + data.year9 + data.year10 + data.year11;
         });
 
-        // === Handling Button Clicks to Display Points on Plumbobs ===
+        // Update span text with all year groups
+        function updateDiamondInfo() {
+            Object.keys(housesData).forEach(house => {
+                const info = housesData[house];
+                const textElement = document.getElementById(`${house}-text`);
+                
+                // Create main text and details containers
+                textElement.innerHTML = `
+                    <div class="main-text">
+                        ${info.name}<br>
+                        <span id="${house}-total">0</span>
+                    </div>
+                    <div class="details"><br><br><br>
+                        Y7: ${info.year7}<br>
+                        Y8: ${info.year8}<br>
+                        Y9: ${info.year9}<br>
+                        Y10: ${info.year10}<br>
+                        Y11: ${info.year11}
+                    </div>`;
 
-        function displayCategoryPoints(category) {
-            // Remove 'active' class from all buttons
-            const buttons = document.querySelectorAll('.overlay button');
-            buttons.forEach(btn => btn.classList.remove('active'));
-
-            // Add 'active' class to the clicked button
-            event.currentTarget.classList.add('active');
-
-            // Array to hold plumbobs with their respective points
-            const plumbobsWithPoints = plumbobs.map(item => {
-                const house = housesData[item.key];
-                let points = house[category];
-
-                // Handle cases where totals might not be defined
-                if (points === undefined || points === null) {
-                    points = 0;
-                }
-
-                return { ...item, points };
-            });
-
-            // Sort plumbobs based on points in descending order
-            plumbobsWithPoints.sort((a, b) => b.points - a.points);
-
-            // Define new x and y positions based on sorted order
-            const totalPlumbobs = plumbobsWithPoints.length;
-            const spacing = 8; // Total width span (from -4 to +4)
-            const startX = -spacing / 2;
-            const interval = spacing / (totalPlumbobs - 1);
-
-            // Calculate min and max scores for dynamic y-scaling
-            const maxPoints = Math.max(...plumbobsWithPoints.map(item => item.points));
-            const minPoints = Math.min(...plumbobsWithPoints.map(item => item.points));
-            const yRange = 4; // Define the vertical range for y positioning
-            const minY = -2; // Minimum y-value (lowest score position)
-
-            plumbobsWithPoints.forEach((item, index) => {
-                // Calculate normalized y based on the score
-                const normalizedScore = (item.points - minPoints) / (maxPoints - minPoints); // Normalize score to [0, 1]
-                const newY = minY + normalizedScore * yRange;
-
-                // Calculate x-position based on sorted order
-                const newX = startX + interval * index;
-
-                // Update label with bold points
-                item.label.innerHTML = `${housesData[item.key].name}<br><strong>${item.points}</strong>`;
-
-                // Use GSAP to tween the plumbob's x and y positions
-                gsap.to(item.plumbob.group.position, {
-                    x: newX,
-                    y: newY,
-                    duration: 1, // 1 second
-                    ease: "power2.out"
+                // Animate the total value
+                animateValue(0, info.wholeTotal, 2000, (value) => {
+                    document.getElementById(`${house}-total`).textContent = value;
                 });
             });
         }
 
-        // Function to clear all Plumbob labels
-        function clearPlumbobLabels() {
-            plumbobs.forEach(item => {
-                item.label.innerHTML = '';
+        // Position spans relative to diamonds
+        function positionSpansRelativeToDiamonds() {
+            const diamondsInfo = [
+                { id: 'ruby-text', position: [-2, 2, 0] },
+                { id: 'amber-text', position: [0, 2, 0] },
+                { id: 'emerald-text', position: [2, 2, 0] },
+                { id: 'sapphire-text', position: [4, 2, 0] }
+            ];
+
+            diamondsInfo.forEach(({ id, position }) => {
+                const span = document.getElementById(id);
+                const diamondPosition = new THREE.Vector3(...position);
+                const canvasWidth = renderer.domElement.offsetWidth;
+                const canvasHeight = renderer.domElement.offsetHeight;
+
+                const projectedPosition = diamondPosition.clone().project(camera);
+
+                const x = (projectedPosition.x * 0.5 + 0.5) * canvasWidth;
+                const y = (1 - (projectedPosition.y * 0.5 + 0.5)) * canvasHeight;
+
+                span.style.position = 'absolute';
+                span.style.left = `${x}px`;
+                span.style.top = `${y + 110}px`;
+                span.style.transform = 'translateX(-50%)';
             });
         }
 
-        // Trigger the default selection ('Total') on page load
-        // Since the script is at the end of the body, the DOM is already loaded
-        window.onload = function() {
-            // Simulate a click on the 'Total' button to initialize
-            const totalButton = document.querySelector('.overlay button:last-child');
-            if (totalButton) {
-                totalButton.click();
-            }
-        };
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            scene.traverse(object => {
+                if (object.isMesh) object.rotation.y += 0.01;
+            });
+            controls.update();
+            renderer.render(scene, camera);
+            positionSpansRelativeToDiamonds();
+        }
+
+        // Handle resizing
+        window.addEventListener('resize', () => {
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            positionSpansRelativeToDiamonds();
+        });
+
+        // Initial setup
+        updateDiamondInfo();
+        animate();
     </script>
 </body>
 </html>
