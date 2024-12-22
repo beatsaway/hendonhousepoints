@@ -14,7 +14,6 @@
             margin: 0;
             overflow: hidden;
             font-family: 'Cinzel', serif; 
-            position: relative;
             background-color: #00023b; /* Match Three.js background */
         }
 
@@ -28,104 +27,95 @@
             z-index: 0; /* Background layer */
         }
 
-        /* Overlay Button Container */
+        /* Overlay Container */
         .overlay {
             position: absolute;
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 3; /* Above Three.js canvas */
+            z-index: 3;
             display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            max-width: 95%;
+            gap: 15px;
+            padding: 12px 20px;
+            border-radius: 12px;
+            max-width: 90%;
             overflow-x: auto;
+            backdrop-filter: blur(10px); /* Glassmorphism effect */
         }
 
-        /* Harry Potter-like Button Styling */
+        /* Button Styling */
         .overlay button {
-            font-family: 'Cinzel', serif;
-            font-size: 16px;
-            padding: 12px 24px;
-            background-color: #3c1e1e; /* Dark maroon */
-            color: #e3b129; /* Light parchment-like color */
-            border: 2px solid #8b4513; /* SaddleBrown border */
-            border-radius: 5px;
+            font-family: 'Arial', sans-serif; /* Modern sans-serif font */
+            font-size: 14px;
+            padding: 10px 18px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #f0e6d2;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
             cursor: pointer;
-            transition: background-color 0.3s, transform 0.2s;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
             min-width: 80px;
-            flex: 1 1 auto;
             text-align: center;
         }
 
         .overlay button:hover {
-            background-color: #5a2a2a; /* Lighter maroon on hover */
+            background: rgba(255, 255, 255, 0.3);
             transform: scale(1.05);
         }
 
         .overlay button.active {
-            background-color: #8b4513; /* Highlight active button */
+            background: #8b4513; /* Highlight active button */
             color: #fff;
         }
 
         /* Label Styling */
         .plumbob-label {
             position: absolute;
-            color: #f0e6d2; /* Light parchment-like color */
-            font-size: 1.2rem;
+            color: #f0e6d2;
+            font-size: 1.1rem;
             pointer-events: none;
             transform: translate(-50%, -50%);
-            white-space: nowrap;
-            text-align: center;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-            z-index: 4; /* Above buttons */
-            font-family: 'Cinzel', serif;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            z-index: 4;
         }
 
         /* Responsive Adjustments */
         @media (max-width: 768px) {
-            /* Adjust button padding and font size for tablets */
+            .overlay {
+                flex-wrap: wrap;
+                padding: 8px 16px;
+            }
+
             .overlay button {
-                padding: 10px 20px;
-                font-size: 14px;
+                font-size: 13px;
+                padding: 8px 14px;
             }
         }
 
         @media (max-width: 480px) {
-            /* Stack buttons vertically on small screens */
             .overlay {
                 flex-direction: column;
                 align-items: center;
-                top: 10px;
-                padding: 5px;
             }
 
             .overlay button {
-                padding: 14px 28px;
-                font-size: 16px;
+                font-size: 14px;
+                padding: 10px 16px;
                 min-width: 100%;
             }
 
-            /* Increase label font size for better readability */
             .plumbob-label {
-                font-size: 1.4rem;
+                font-size: 1.3rem;
             }
         }
 
-        /* Hide Scrollbar for Overlay on Webkit Browsers */
+        /* Hide Scrollbar */
         .overlay::-webkit-scrollbar {
             display: none;
         }
-
-        .overlay {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-        }
     </style>
+
 </head>
 <body>
     <!-- 3D Scene Canvas -->
@@ -133,6 +123,7 @@
 
     <!-- Overlay Buttons for Category Selection -->
     <div class="overlay">
+    <button onclick="consoleLogCameraStatsRealtime()">Cap Camera</button>
         <button onclick="displayCategoryPoints('year7')">Y7</button>
         <button onclick="displayCategoryPoints('year8')">Y8</button>
         <button onclick="displayCategoryPoints('year9')">Y9</button>
@@ -153,6 +144,15 @@
     <!-- GSAP Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script>
+        function consoleLogCameraStatsRealtime() {
+    console.log("Camera Position:", camera.position);
+    console.log("Camera Rotation:", camera.rotation);
+    console.log("Camera FOV:", camera.fov);
+    console.log("Camera Aspect Ratio:", camera.aspect);
+    console.log("Camera Near Clipping Plane:", camera.near);
+    console.log("Camera Far Clipping Plane:", camera.far);
+}
+
         // === House Data and Management ===
         // Function to log camera statistics
         function consoleLogCameraStatsRealtime() {
@@ -199,8 +199,8 @@
                 ks4Total: 0,
                 wholeTotal: 0
             },
-            ember: {
-                name: 'Ember',
+            amber: {
+                name: 'Amber',
                 year7: 2623,
                 year8: 2654,
                 year9: 2430,
@@ -245,17 +245,14 @@
             1000 // Camera Far Clipping Plane (increased for better star visibility)
         );
 
-        // Set Camera Position
-        camera.position.set(-4.504709190194012, 2.3614634543782396, 3.759133605688632);
+        // Set default Camera Position
+        camera.position.set(-0.851505233651819, 4.1174045243844475, 6.098105890519157);
 
+        // Set default Camera Rotation
+        camera.rotation.set(-0.5256368293146731, -0.10339789156509387, -0.05979990657819899);
         // Set Camera Rotation
         camera.rotation.order = 'XYZ'; // Ensure rotation order matches the provided data
-        camera.rotation.set(
-            -0.5608924995077641, // _x rotation in radians
-            -0.7927085460529486, // _y rotation in radians
-            -0.4207190625003154  // _z rotation in radians
-        );
-
+        
         // Create the renderer
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -325,7 +322,7 @@
         // Create a Points material for stars
         const starMaterial = new THREE.PointsMaterial({
             map: starTexture, // Assign the circular star texture
-            size: 2, // Increased star size
+            size: 1.5, // Increased star size
             sizeAttenuation: true,
             transparent: true,
             opacity: 0.8,
@@ -395,9 +392,8 @@
         // === Plumbob Class ===
 
         class Plumbob {
-            constructor(size = 1, borderThickness = 0.05, rotationSpeed = 0.005, color = '#00ff00') {
+            constructor(size = 1, rotationSpeed = 0.005, color = '#00ff00') {
                 this.size = size;
-                this.borderThickness = borderThickness;
                 this.rotationSpeed = rotationSpeed;
                 this.color = color;
 
@@ -405,46 +401,73 @@
                 this.group = new THREE.Group();
                 this.group.scale.set(this.size, this.size, this.size);
 
-                // Material for the Plumbob (reflective and transparent)
-                this.material = new THREE.MeshPhongMaterial({
-                    color: new THREE.Color(this.color),
-                    specular: 0xffffff,
-                    shininess: 50,
-                    opacity: 0.76,
-                    transparent: true,
-                    flatShading: false
-                });
-
-                // Geometry and Mesh for the top cone
-                const topConeGeometry = new THREE.ConeGeometry(0.5, 1, 4);
-                this.topCone = new THREE.Mesh(topConeGeometry, this.material);
-                this.topCone.rotation.y = Math.PI / 4; // Diamond-like rotation
-                this.group.add(this.topCone);
-
-                // Geometry and Mesh for the bottom cone
-                const bottomConeGeometry = new THREE.ConeGeometry(0.5, 1, 4);
-                this.bottomCone = new THREE.Mesh(bottomConeGeometry, this.material);
-                this.bottomCone.rotation.x = Math.PI; // Flip upside down
-                this.bottomCone.rotation.y = Math.PI / 4;
-                this.bottomCone.position.y = -1; // Offset below the top cone
-                this.group.add(this.bottomCone);
+                // Add the diamond mesh to the group
+                const diamondMesh = this.createDiamondMesh();
+                this.group.add(diamondMesh);
             }
 
-            /**
-             * Adds the Plumbob to the provided Three.js group.
-             * @param {THREE.Group} group - The Three.js group to add the Plumbob to.
-             */
+            createDiamondMesh() {
+                const geometry = new THREE.BufferGeometry();
+                const vertices = [];
+                const indices = [];
+
+                const midVertices = 6;
+                const radius = 1;
+                const angleStep = (2 * Math.PI) / midVertices;
+
+                const bottomPoint = [0, -1, 0];
+                const topCenter = [0, 0.4, 0];
+                const midPoints = [];
+                const topPoints = [];
+
+                for (let i = 0; i < midVertices; i++) {
+                    const angle = i * angleStep;
+                    midPoints.push([radius * Math.cos(angle), 0, radius * Math.sin(angle)]);
+                    topPoints.push([0.5 * Math.cos(angle), 0.4, 0.5 * Math.sin(angle)]);
+                }
+
+                vertices.push(...bottomPoint);
+                midPoints.forEach(point => vertices.push(...point));
+                topPoints.forEach(point => vertices.push(...point));
+                vertices.push(...topCenter);
+
+                const bottomIndex = 0;
+                const topCenterIndex = vertices.length / 3 - 1;
+
+                for (let i = 0; i < midVertices; i++) {
+                    const next = (i + 1) % midVertices;
+                    indices.push(bottomIndex, i + 1, next + 1);
+                    indices.push(i + 1, midVertices + 1 + i, midVertices + 1 + next);
+                    indices.push(i + 1, midVertices + 1 + next, next + 1);
+                    indices.push(midVertices + 1 + next, midVertices + 1 + i, topCenterIndex);
+                }
+
+                geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
+                geometry.setIndex(indices);
+                geometry.computeVertexNormals();
+
+                const material = new THREE.MeshPhongMaterial({
+                    shininess: 150,
+                    specular: 0xffffff,
+                    transparent: true,
+                    flatShading: true,
+                    opacity: 0.75,
+
+                    color: new THREE.Color(this.color) 
+                });
+
+                return new THREE.Mesh(geometry, material);
+            }
+
             addToGroup(group) {
                 group.add(this.group);
             }
 
-            /**
-             * Updates the rotation of the Plumbob.
-             */
             update() {
                 this.group.rotation.y += this.rotationSpeed;
             }
         }
+
 
         // Function to create a plumbob label
         function createPlumbobLabel() {
@@ -466,19 +489,19 @@
         }
 
         // Instantiate four Plumbobs with different colors and slightly random rotation speeds
-        const plumbobRed = new Plumbob(2, 0.01, getRandomRotationSpeed(0.005), 'red');
+        const plumbobRed = new Plumbob(1.33, getRandomRotationSpeed(0.005), 'red');
         plumbobRed.addToGroup(plumbobGroup);
         plumbobRed.group.position.set(-4, 2, 0); // Initial position (will be updated dynamically)
 
-        const plumbobYellow = new Plumbob(2, 0.01, getRandomRotationSpeed(0.005), 'yellow');
+        const plumbobYellow = new Plumbob(1.33, getRandomRotationSpeed(0.005), 'yellow');
         plumbobYellow.addToGroup(plumbobGroup);
         plumbobYellow.group.position.set(-1.33, 2, 0); // Initial position (will be updated dynamically)
 
-        const plumbobGreen = new Plumbob(2, 0.01, getRandomRotationSpeed(0.005), 'green');
+        const plumbobGreen = new Plumbob(1.33, getRandomRotationSpeed(0.005), 'green');
         plumbobGreen.addToGroup(plumbobGroup);
         plumbobGreen.group.position.set(1.33, 2, 0); // Initial position (will be updated dynamically)
 
-        const plumbobBlue = new Plumbob(2, 0.01, getRandomRotationSpeed(0.005), 'blue');
+        const plumbobBlue = new Plumbob(1.33, getRandomRotationSpeed(0.005), 'blue');
         plumbobBlue.addToGroup(plumbobGroup);
         plumbobBlue.group.position.set(4, 2, 0); // Initial position (will be updated dynamically)
 
@@ -496,7 +519,7 @@
             },
             { 
                 plumbob: plumbobYellow, 
-                key: 'ember', 
+                key: 'amber', 
                 label: createPlumbobLabel(), 
                 phase: Math.random() * Math.PI * 2, 
                 amplitude: 0.2, 
@@ -569,33 +592,22 @@
                 }
             }
 
-            // Update Starfield: Move stars right
+            // Update Starfield Positions
             const positions = starGeometry.attributes.position.array;
             const speed = 1; // Adjust speed as needed
-
             for (let i = 0; i < positions.length; i += 3) {
                 positions[i] += speed; // Move right along the X-axis
-
-                // If star moves beyond right boundary, reset to the left
-                if (positions[i] > 500) { // Adjust boundary as per star spread
-                    positions[i] = -500; // Reset to the left
-                    positions[i + 1] = THREE.MathUtils.randFloatSpread(1000); // Random Y
-                    positions[i + 2] = THREE.MathUtils.randFloatSpread(1000); // Random Z
+                if (positions[i] > 500) {
+                    positions[i] = -500;
+                    positions[i + 1] = THREE.MathUtils.randFloatSpread(1000);
+                    positions[i + 2] = THREE.MathUtils.randFloatSpread(1000);
                 }
             }
-
-            // Inform Three.js that positions have been updated
             starGeometry.attributes.position.needsUpdate = true;
 
-            // Current time in seconds for sine wave calculation
-            const timeInSeconds = Date.now() * 0.001;
-
-            // Update each Plumbob's rotation and position
+            // Update Plumbobs (Diamonds) Rotation
             plumbobs.forEach(item => {
-                item.plumbob.update();
-
-                // Update y-position based on sine wave with unique phase
-                item.plumbob.group.position.y = item.baseY + item.amplitude * Math.sin(timeInSeconds + item.phase);
+                item.plumbob.group.rotation.y += item.plumbob.rotationSpeed; // Apply rotation speed
             });
 
             // Update OrbitControls
@@ -611,9 +623,8 @@
                 const y = (-pos.y * 0.5 + 0.5) * window.innerHeight;
 
                 item.label.style.left = `${x}px`;
-                item.label.style.top = `${y + 220}px`; // Position below the Plumbob
+                item.label.style.top = `${y}px`;
 
-                // Show or hide the label based on whether it has content
                 if (item.label.innerHTML) {
                     item.label.style.display = 'block';
                 } else {
@@ -621,7 +632,7 @@
                 }
             });
 
-            // Render the scene from the camera's perspective
+            // Render the scene
             renderer.render(scene, camera);
         }
 
@@ -640,7 +651,6 @@
 
         // === Handling Button Clicks to Display Points on Plumbobs ===
 
-        // Function to display points for a specific category on Plumbobs
         function displayCategoryPoints(category) {
             // Remove 'active' class from all buttons
             const buttons = document.querySelectorAll('.overlay button');
@@ -665,21 +675,33 @@
             // Sort plumbobs based on points in descending order
             plumbobsWithPoints.sort((a, b) => b.points - a.points);
 
-            // Define new x positions based on sorted order
+            // Define new x and y positions based on sorted order
             const totalPlumbobs = plumbobsWithPoints.length;
             const spacing = 8; // Total width span (from -4 to +4)
             const startX = -spacing / 2;
             const interval = spacing / (totalPlumbobs - 1);
 
+            // Calculate min and max scores for dynamic y-scaling
+            const maxPoints = Math.max(...plumbobsWithPoints.map(item => item.points));
+            const minPoints = Math.min(...plumbobsWithPoints.map(item => item.points));
+            const yRange = 4; // Define the vertical range for y positioning
+            const minY = -2; // Minimum y-value (lowest score position)
+
             plumbobsWithPoints.forEach((item, index) => {
+                // Calculate normalized y based on the score
+                const normalizedScore = (item.points - minPoints) / (maxPoints - minPoints); // Normalize score to [0, 1]
+                const newY = minY + normalizedScore * yRange;
+
+                // Calculate x-position based on sorted order
                 const newX = startX + interval * index;
 
                 // Update label with bold points
                 item.label.innerHTML = `${housesData[item.key].name}<br><strong>${item.points}</strong>`;
 
-                // Use GSAP to tween the plumbob's x position to newX
+                // Use GSAP to tween the plumbob's x and y positions
                 gsap.to(item.plumbob.group.position, {
                     x: newX,
+                    y: newY,
                     duration: 1, // 1 second
                     ease: "power2.out"
                 });
